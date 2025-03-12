@@ -1,0 +1,20 @@
+2025-03-12 11:51:40,112 - utils.common - INFO - Starting Video Crawler Application
+2025-03-12 11:51:40,175 - utils.common - INFO - Created directory: downloads
+2025-03-12 11:51:40,176 - utils.common - WARNING - ffmpeg not found. Audio extraction will be unavailable.
+2025-03-12 11:51:40,177 - utils.common - WARNING - ffmpeg not found. Some subtitle extraction features may be unavailable.
+2025-03-12 11:51:40,178 - utils.common - INFO - Created directory: cookies
+2025-03-12 11:51:40,178 - utils.common - INFO - Created directory: C:\Users\Administrator\Downloads\video_crawler
+2025-03-12 11:52:18,290 - utils.common - INFO - 下载目录已设置为: C:/Users/Administrator/Desktop
+2025-03-12 11:52:24,398 - utils.common - INFO - Excel文件已设置为: C:/Users/Administrator/Desktop/video_data.xlsx
+2025-03-12 11:52:30,864 - utils.common - INFO - 处理链接 1/2: 3.38 08/24 L@j.cn Nws:/ AE教程 宣传片包装，城市楼梯贴图效果# AE # ae教程 # 宣传片包装 # 知识分享 # 干货分享  https://v.douyin.com/i5g4xRww/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 11:52:30,871 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=None
+2025-03-12 11:52:31,379 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 11:52:31,384 - utils.common - INFO - 处理链接 2/2: 6.66 01/04 R@K.ws Chb:/ 使用DeepSeek、即梦和剪映王炸组合，轻松制作旅行大片 # 手机技巧 # 视频剪辑 # DeepSeek # 剪映 # deepseek王炸组合  https://v.douyin.com/i5g4VgjM/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 11:52:31,394 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=None
+2025-03-12 11:52:31,622 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:04:22,008 - utils.common - INFO - 处理链接 1/2: 5.89 JII:/ 02/17 X@m.DU 圆柱圆锥体积表面积是六年级下册的重点难点 这套六合一的圆柱圆锥演示套装，不仅能让孩子们直观看到立体模型，还配有展开图，轻松理解体积和表面积的原理，为初中打好基础！# 小学数学# 六年级下册# 必备学具  https://v.douyin.com/i5rSr1pG/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:04:22,014 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=None
+2025-03-12 12:04:22,559 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:04:22,567 - utils.common - INFO - 处理链接 2/2: 4.35 Rxf:/ H@V.YZ 09/20 主图多放一个元素 点击率暴跌70%% # 电商主图 # 电商 # 主图 # 设计  https://v.douyin.com/i5rSM7Y7/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:04:22,580 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=None
+2025-03-12 12:04:22,837 - utils.common - INFO - 无法获取视频信息或播放地址

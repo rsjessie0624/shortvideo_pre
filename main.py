@@ -1,18 +1,24 @@
 import sys
-import os
-import time
-from controller import Controller
-from gui import VideoCollectorGUI
+import tkinter as tk
+from gui.app import VideoDownloaderApp
+from utils.common import setup_logger
 
 def main():
-    # 创建控制器
-    controller = Controller()
+    # 设置日志
+    logger = setup_logger()
+    logger.info("Starting Video Crawler Application")
     
-    # 创建GUI
-    gui = VideoCollectorGUI(controller)
+    # 创建Tkinter根窗口
+    root = tk.Tk()
+    app = VideoDownloaderApp(root)
     
-    # 运行GUI
-    gui.run()
+    # 启动应用
+    try:
+        root.mainloop()
+    except Exception as e:
+        logger.exception(f"Application crashed: {e}")
+    finally:
+        logger.info("Application closed")
 
 if __name__ == "__main__":
     main()
