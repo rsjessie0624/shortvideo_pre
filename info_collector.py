@@ -1,88 +1,113 @@
-import json
 import re
+import json
+import time
+import requests
+from utils import format_number
 
 class InfoCollector:
-    """采集视频相关信息的模块"""
-    
-    def __init__(self, network_request):
-        self.network_request = network_request
+    def __init__(self, downloader):
+        self.downloader = downloader
+        self.session = downloader.session
     
     def collect_douyin_info(self, video_id):
         """采集抖音视频信息"""
+        # 构建API请求URL
+        api_url = f"https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids={video_id}"
+        
         try:
-            # 获取视频详情API (这需要根据抖音实际API调整)
-            api_url = f"https://www.douyin.com/aweme/v1/web/aweme/detail/?aweme_id={video_id}"
-            
-            response = self.network_request.request(api_url)
-            
-            if not response or response.status_code != 200:
-                print(f"获取视频信息失败: HTTP {response.status_code if response else 'No response'}")
-                return None
+            # 获取视频信息
+            response = self.session.get(api_url, timeout=30)
+            response.raise_for_status()
             
             data = response.json()
             
-            # 提取所需信息
-            aweme_detail = data.get('aweme_detail', {})
+            # 检查是否需要登录
+            if 'status_code' in data and data['status_code'] != 0:
+                if data.get('status_msg') == 'need_login':
+                    return {'success': False, 'need_login': True, 'message': '需要登录才能获取视频信息'}
+                return {'success': False, 'message': data.get('status_msg', '获取视频信息失败')}
             
-            video_info = {
-                "title": aweme_detail.get('desc', '无标题'),
-                "description": aweme_detail.get('desc', ''),
-                "tags": self._extract_tags(aweme_detail.get('desc', '')),
-                "transcript": self._extract_transcript(aweme_detail),
-                "stats": {
-                    "likes": aweme_detail.get('statistics', {}).get('digg_count', 0),
-                    "comments": aweme_detail.get('statistics', {}).get('comment_count', 0),
-                    "favorites": aweme_detail.get('statistics', {}).get('collect_count', 0),
-                    "shares": aweme_detail.get('statistics', {}).get('share_count', 0)
+            # 提取视频信息
+            item_list = data.get('item_list', [])
+            if not item_list:
+                return {'success': False, 'message': '未找到视频信息'}
+                
+            item = item_list[0]
+            
+            # 解析数据
+            info = {
+                'title': item.get('desc', ''),
+                'description': item.get('desc', ''),
+                'tags': [],
+                'transcript': '',
+                'stats': {
+                    'likes': format_number(item.get('statistics', {}).get('digg_count', 0)),
+                    'comments': format_number(item.get('statistics', {}).get('comment_count', 0)),
+                    'favorites': format_number(item.get('statistics', {}).get('collect_count', 0)),
+                    'shares': format_number(item.get('statistics', {}).get('share_count', 0))
                 },
-                "author": {
-                    "name": aweme_detail.get('author', {}).get('nickname', '未知用户'),
-                    "id": aweme_detail.get('author', {}).get('unique_id', '')
+                'author': {
+                    'name': item.get('author', {}).get('nickname', ''),
+                    'id': item.get('author', {}).get('unique_id', '')
                 },
-                "source_url": f"https://www.douyin.com/video/{video_id}",
-                "video_url": self._extract_video_url(aweme_detail)
+                'source_url': f"https://www.douyin.com/video/{video_id}"
             }
             
-            return video_info
+            # 提取标签
+            text_extra = item.get('text_extra', [])
+            for text in text_extra:
+                if 'hashtag_name' in text and text['hashtag_name']:
+                    info['tags'].append(text['hashtag_name'])
             
+            # 尝试获取文字稿
+            self._get_douyin_transcript(video_id, info)
+            
+            return {'success': True, 'info': info}
+            
+        except requests.exceptions.RequestException as e:
+            return {'success': False, 'message': f'网络请求异常: {str(e)}'}
         except Exception as e:
-            print(f"采集抖音视频信息时出错: {e}")
-            return None
+            return {'success': False, 'message': f'获取抖音视频信息失败: {str(e)}'}
     
-    def _extract_tags(self, description):
-        """从描述中提取标签"""
-        # 抖音标签通常是 #标签内容 的形式
-        tags = re.findall(r'#(\w+)', description)
-        return tags
-    
-    def _extract_transcript(self, aweme_detail):
-        """提取视频文字内容"""
-        # 如果有字幕，从字幕中提取
-        captions = aweme_detail.get('captions', [])
-        if captions:
-            return ' '.join([caption.get('text', '') for caption in captions])
+    def _get_douyin_transcript(self, video_id, info):
+        """获取抖音视频文字稿"""
+        # 尝试通过额外API获取文字稿
+        api_url = f"https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids={video_id}&subtitle=1"
         
-        # 否则返回视频描述
-        return aweme_detail.get('desc', '')
-    
-    def _extract_video_url(self, aweme_detail):
-        """提取视频URL"""
-        # 尝试获取无水印视频链接
         try:
-            video_info = aweme_detail.get('video', {})
-            play_addr = video_info.get('play_addr', {})
-            url_list = play_addr.get('url_list', [])
+            response = self.session.get(api_url, timeout=30)
+            response.raise_for_status()
             
-            # 优先选择高清无水印链接
-            for url in url_list:
-                if 'play_addr' in url and 'playwm' not in url:
-                    return url
+            data = response.json()
+            item_list = data.get('item_list', [])
             
-            # 如果没有找到高清无水印链接，返回第一个可用链接
-            if url_list:
-                return url_list[0]
-            
+            if item_list:
+                item = item_list[0]
+                # 获取字幕信息
+                video_captions = item.get('video_captions', [])
+                
+                if video_captions:
+                    # 合并所有字幕文本
+                    transcript = ""
+                    for caption in video_captions:
+                        caption_list = caption.get('caption_list', [])
+                        for cap in caption_list:
+                            if 'text' in cap:
+                                transcript += cap['text'] + " "
+                    
+                    info['transcript'] = transcript.strip()
         except Exception as e:
-            print(f"提取视频URL时出错: {e}")
-        
-        return None
+            print(f"获取抖音文字稿失败: {e}")
+    
+    def collect_info(self, platform, video_id):
+        """根据平台采集视频信息"""
+        if platform == 'douyin':
+            return self.collect_douyin_info(video_id)
+        elif platform == 'xiaohongshu':
+            return {'success': False, 'message': '小红书视频信息采集功能开发中'}
+        elif platform == 'kuaishou':
+            return {'success': False, 'message': '快手视频信息采集功能开发中'}
+        elif platform == 'weixin':
+            return {'success': False, 'message': '微信视频号信息采集功能开发中'}
+        else:
+            return {'success': False, 'message': '不支持的平台'}

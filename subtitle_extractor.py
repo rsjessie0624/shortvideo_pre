@@ -1,176 +1,258 @@
 import os
-import subprocess
-import requests
 import json
-import base64
+import re
+import requests
+import subprocess
 import time
+import base64
+import hashlib
+import hmac
 
 class SubtitleExtractor:
-    """从视频中提取文字内容的模块"""
-    
-    def __init__(self, api_key=None):
-        # 如果使用百度语音识别API，需要设置API密钥
-        self.api_key = api_key
-        self.api_secret = None
-        self.access_token = None
+    def __init__(self, config):
+        self.config = config
+        # 百度API配置
+        self.baidu_api = {
+            'enable': False,
+            'app_id': '',
+            'api_key': '',
+            'secret_key': ''
+        }
         
-        # 尝试使用本地ffmpeg进行字幕提取
-        self.use_local_ffmpeg = True
+        # 讯飞API配置
+        self.xunfei_api = {
+            'enable': False,
+            'app_id': '',
+            'api_key': '',
+            'api_secret': ''
+        }
+        
+        # 加载API配置
+        self._load_api_config()
     
-    def set_api_credentials(self, api_key, api_secret):
-        """设置API凭证"""
-        self.api_key = api_key
-        self.api_secret = api_secret
+    def _load_api_config(self):
+        """加载API配置"""
+        api_config_file = os.path.join(self.config.config_dir, 'api_config.json')
+        if os.path.exists(api_config_file):
+            try:
+                with open(api_config_file, 'r', encoding='utf-8') as f:
+                    api_config = json.load(f)
+                
+                # 更新百度API配置
+                if 'baidu_api' in api_config:
+                    self.baidu_api.update(api_config['baidu_api'])
+                
+                # 更新讯飞API配置
+                if 'xunfei_api' in api_config:
+                    self.xunfei_api.update(api_config['xunfei_api'])
+                    
+                print("已加载API配置")
+            except Exception as e:
+                print(f"加载API配置失败: {e}")
+    
+    def save_api_config(self):
+        """保存API配置"""
+        api_config = {
+            'baidu_api': self.baidu_api,
+            'xunfei_api': self.xunfei_api
+        }
+        
+        api_config_file = os.path.join(self.config.config_dir, 'api_config.json')
+        try:
+            with open(api_config_file, 'w', encoding='utf-8') as f:
+                json.dump(api_config, f, ensure_ascii=False, indent=4)
+            print("API配置已保存")
+            return True
+        except Exception as e:
+            print(f"保存API配置失败: {e}")
+            return False
     
     def extract_from_video(self, video_path):
         """从视频中提取字幕"""
-        # 首先尝试从视频文件中提取内置字幕
-        subtitle_text = self._extract_embedded_subtitle(video_path)
+        # 检查ffmpeg是否可用
+        if not self._check_ffmpeg():
+            return {'success': False, 'message': '未找到ffmpeg，无法提取音频'}
         
-        # 如果没有内置字幕，尝试使用语音识别
-        if not subtitle_text and self.api_key:
-            subtitle_text = self._recognize_speech(video_path)
+        # 提取音频
+        audio_path = video_path.replace('.mp4', '.wav')
+        if not self._extract_audio(video_path, audio_path):
+            return {'success': False, 'message': '提取音频失败'}
         
-        return subtitle_text
+        # 尝试从视频中直接提取字幕
+        result = self._extract_embedded_subtitle(video_path)
+        if result['success']:
+            # 删除临时音频文件
+            try:
+                os.remove(audio_path)
+            except:
+                pass
+            return result
+        
+        # 优先使用百度API
+        if self.baidu_api['enable'] and self.baidu_api['app_id'] and self.baidu_api['api_key'] and self.baidu_api['secret_key']:
+            result = self._recognize_baidu(audio_path)
+            if result['success']:
+                # 删除临时音频文件
+                try:
+                    os.remove(audio_path)
+                except:
+                    pass
+                return result
+        
+        # 尝试使用讯飞API
+        if self.xunfei_api['enable'] and self.xunfei_api['app_id'] and self.xunfei_api['api_key'] and self.xunfei_api['api_secret']:
+            result = self._recognize_xunfei(audio_path)
+            if result['success']:
+                # 删除临时音频文件
+                try:
+                    os.remove(audio_path)
+                except:
+                    pass
+                return result
+        
+        # 删除临时音频文件
+        try:
+            os.remove(audio_path)
+        except:
+            pass
+        
+        return {'success': False, 'message': '无法提取字幕，请配置语音识别API或使用带字幕的视频'}
+    
+    def _check_ffmpeg(self):
+        """检查ffmpeg是否可用"""
+        try:
+            subprocess.run(['ffmpeg', '-version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return True
+        except:
+            return False
+    
+    def _extract_audio(self, video_path, audio_path):
+        """从视频中提取音频"""
+        try:
+            subprocess.run([
+                'ffmpeg', '-i', video_path, '-vn', '-acodec', 'pcm_s16le', 
+                '-ar', '16000', '-ac', '1', audio_path
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return os.path.exists(audio_path)
+        except Exception as e:
+            print(f"提取音频失败: {e}")
+            return False
     
     def _extract_embedded_subtitle(self, video_path):
-        """提取视频中的内置字幕"""
+        """从视频中提取嵌入的字幕"""
         try:
-            if not self.use_local_ffmpeg:
-                print("未启用本地ffmpeg，跳过内置字幕提取")
-                return None
+            # 获取字幕信息
+            result = subprocess.run([
+                'ffmpeg', '-i', video_path
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             
-            # 使用ffmpeg提取字幕流
-            output_srt = os.path.splitext(video_path)[0] + ".srt"
+            output = result.stderr
             
-            command = [
-                'ffmpeg',
-                '-i', video_path,
-                '-map', '0:s:0',  # 选择第一个字幕流
-                output_srt,
-                '-y'  # 覆盖已存在的文件
-            ]
+            # 查找字幕流
+            subtitle_streams = re.findall(r'Stream #\d+:\d+(?:\(.*?\))?: Subtitle', output)
             
-            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if subtitle_streams:
+                # 提取字幕到文件
+                subtitle_path = video_path.replace('.mp4', '.srt')
+                subprocess.run([
+                    'ffmpeg', '-i', video_path, '-map', '0:s:0', subtitle_path
+                ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                
+                if os.path.exists(subtitle_path):
+                    # 读取字幕文件内容
+                    with open(subtitle_path, 'r', encoding='utf-8') as f:
+                        subtitle_text = f.read()
+                    
+                    # 解析字幕文本
+                    transcript = self._parse_subtitle(subtitle_text)
+                    
+                    # 删除字幕文件
+                    try:
+                        os.remove(subtitle_path)
+                    except:
+                        pass
+                    
+                    return {'success': True, 'transcript': transcript}
             
-            # 检查是否成功提取字幕
-            if os.path.exists(output_srt) and os.path.getsize(output_srt) > 0:
-                # 读取SRT文件并转换为纯文本
-                return self._srt_to_text(output_srt)
-            
-            return None
-            
+            return {'success': False, 'message': '视频中没有嵌入字幕'}
         except Exception as e:
-            print(f"提取内置字幕时出错: {e}")
-            return None
+            print(f"提取嵌入字幕失败: {e}")
+            return {'success': False, 'message': f'提取嵌入字幕失败: {str(e)}'}
     
-    def _srt_to_text(self, srt_path):
-        """将SRT字幕文件转换为纯文本"""
-        try:
-            with open(srt_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+    def _parse_subtitle(self, subtitle_text):
+        """解析SRT字幕文本，提取纯文本内容"""
+        # 移除时间戳和序号行
+        lines = subtitle_text.split('\n')
+        text_lines = []
+        
+        i = 0
+        while i < len(lines):
+            # 跳过序号行
+            if lines[i].strip().isdigit():
+                i += 1
+                continue
             
-            # 删除SRT时间轴和序号，只保留文本
-            lines = content.split('\n')
-            text_lines = []
+            # 跳过时间戳行
+            if '-->' in lines[i]:
+                i += 1
+                continue
             
-            for line in lines:
-                # 跳过空行、序号行和时间轴行
-                if (line.strip() and 
-                    not line.strip().isdigit() and 
-                    not '-->' in line):
-                    text_lines.append(line.strip())
+            # 添加文本行
+            if lines[i].strip():
+                text_lines.append(lines[i].strip())
             
-            # 合并文本行
-            return ' '.join(text_lines)
-            
-        except Exception as e:
-            print(f"转换SRT文件时出错: {e}")
-            return None
+            i += 1
+        
+        # 合并文本行
+        return ' '.join(text_lines)
     
-    def _recognize_speech(self, video_path):
-        """使用语音识别API识别视频中的语音"""
+    def _recognize_baidu(self, audio_path):
+        """使用百度语音识别API提取文字"""
         try:
-            if not self.api_key:
-                print("未设置API密钥，无法进行语音识别")
-                return None
+            # 获取token
+            token_url = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={self.baidu_api['api_key']}&client_secret={self.baidu_api['secret_key']}"
+            response = requests.get(token_url)
+            token = response.json().get('access_token')
             
-            # 首先从视频中提取音频
-            audio_path = os.path.splitext(video_path)[0] + "_temp.wav"
-            
-            command = [
-                'ffmpeg',
-                '-i', video_path,
-                '-vn',  # 禁用视频
-                '-acodec', 'pcm_s16le',  # 设置音频编码为PCM
-                '-ar', '16000',  # 设置采样率为16kHz
-                '-ac', '1',  # 设置为单声道
-                audio_path,
-                '-y'  # 覆盖已存在的文件
-            ]
-            
-            subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            
-            # 获取百度AI的访问令牌
-            if not self.access_token:
-                self._get_baidu_token()
-            
-            if not self.access_token:
-                print("无法获取百度AI访问令牌")
-                return None
+            if not token:
+                return {'success': False, 'message': '获取百度API Token失败'}
             
             # 读取音频文件
             with open(audio_path, 'rb') as f:
                 audio_data = f.read()
             
-            # 对音频数据进行Base64编码
-            base64_audio = base64.b64encode(audio_data).decode('utf-8')
+            # 对音频数据进行base64编码
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
             
-            # 调用百度语音识别API
-            url = "https://vop.baidu.com/server_api"
+            # 识别参数
+            params = {
+                'format': 'wav',
+                'rate': 16000,
+                'channel': 1,
+                'cuid': self.baidu_api['app_id'],
+                'token': token,
+                'dev_pid': 1537,  # 普通话(支持简单的英文识别)
+                'speech': audio_base64,
+                'len': len(audio_data)
+            }
+            
+            # 发送请求
+            api_url = 'https://vop.baidu.com/server_api'
             headers = {'Content-Type': 'application/json'}
-            payload = json.dumps({
-                "format": "wav",
-                "rate": 16000,
-                "channel": 1,
-                "cuid": "python_demo",
-                "token": self.access_token,
-                "speech": base64_audio,
-                "len": len(audio_data)
-            })
-            
-            response = requests.post(url, headers=headers, data=payload)
+            response = requests.post(api_url, json=params, headers=headers)
             result = response.json()
             
-            # 清理临时音频文件
-            if os.path.exists(audio_path):
-                os.remove(audio_path)
-            
-            # 解析识别结果
+            # 检查结果
             if result.get('err_no') == 0:
-                return result.get('result', [''])[0]
+                transcript = ' '.join([res['result'][0] for res in result.get('result', [])])
+                return {'success': True, 'transcript': transcript}
             else:
-                print(f"语音识别失败: {result.get('err_msg')}")
-                return None
-            
+                return {'success': False, 'message': f"百度语音识别失败: {result.get('err_msg', '未知错误')}"}
         except Exception as e:
-            print(f"语音识别过程中出错: {e}")
-            return None
+            print(f"百度语音识别失败: {e}")
+            return {'success': False, 'message': f'百度语音识别失败: {str(e)}'}
     
-    def _get_baidu_token(self):
-        """获取百度AI的访问令牌"""
-        try:
-            url = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={self.api_key}&client_secret={self.api_secret}"
-            response = requests.get(url)
-            result = response.json()
-            
-            if 'access_token' in result:
-                self.access_token = result['access_token']
-                return True
-            else:
-                print(f"获取百度AI访问令牌失败: {result}")
-                return False
-                
-        except Exception as e:
-            print(f"获取百度AI访问令牌时出错: {e}")
-            return False
+    def _recognize_xunfei(self, audio_path):
+        """使用讯飞语音识别API提取文字"""
+        # 此处省略实现，与百度API类似
+        return {'success': False, 'message': '讯飞语音识别功能开发中'}
