@@ -1,0 +1,668 @@
+# 短视频内容采集与分析系统需求文档（完整版）
+
+## 1. 项目概述
+
+### 1.1 背景与目标
+开发一个能够自动采集和分析多平台短视频内容的系统，支持下载视频、音频、字幕，并提取相关数据到Excel表格中。该系统旨在简化短视频内容分析工作，提高数据收集效率。
+
+### 1.2 系统工作流程
+```
+链接输入 → 链接解析 → [用户登录(按需)] → 内容下载 → 数据提取 → 数据存储 → 结果展示
+```
+
+## 2. 功能需求
+
+### 2.1 链接解析
+- **支持的平台**:
+  - 抖音(优先实现)
+  - 小红书
+  - 视频号
+  - 快手
+- **链接格式处理**:
+  - 标准链接 (如: https://www.douyin.com/video/7130096181794601246)
+  - 短链接 (如: https://v.douyin.com/jqmFup2/)
+  - 分享文本 (如: "#在抖音，记录美好生活# https://v.douyin.com/jqmFup2/")
+
+**示例代码结构**:
+```python
+def parse_link(link_text):
+    """
+    解析输入的链接文本，返回标准化的视频URL和平台类型
+    
+    参数:
+        link_text (str): 用户输入的链接或分享文本
+        
+    返回:
+        tuple: (标准化URL, 平台类型)
+    """
+    # 实现代码
+```
+
+### 2.2 反爬虫处理与用户登录
+
+- **反爬虫检测**:
+  - 自动检测平台是否要求登录或出现验证码
+  - 识别常见的反爬提示信息和HTTP状态码
+
+- **登录流程**:
+  - 当检测到需要登录时，弹出登录提示窗口
+  - 生成二维码并展示给用户进行扫码登录
+  - 提供明确的扫码指引和状态反馈
+
+- **登录界面示例**:
+  ```
+  检测到抖音平台需要登录才能继续操作
+  [二维码图片显示区域]
+  请使用抖音APP扫描上方二维码登录
+  登录状态: 等待扫码...
+  ```
+
+- **会话管理**:
+  - 保存登录后的Cookies和会话信息
+  - 在后续请求中使用已保存的会话信息
+  - 提供登录状态过期检测和自动刷新机制
+
+### 2.3 内容下载
+- **下载内容类型**:
+  - 视频文件 (.mp4)
+  - 音频文件 (.mp3)
+  - 字幕文件 (.srt 或 .txt)
+- **文件命名规则**:
+  - 格式: "[平台]_[作者ID]_[视频标题前50字符]_[视频ID].[扩展名]"
+  - 示例: "抖音_用户123456_这是一个示例视频标题_7130096181794601246.mp4"
+- **存储结构**:
+  - 默认路径: ./downloads/[平台名称]/[日期]/
+  - 可配置自定义路径
+
+### 2.4 数据提取
+- **基本信息**:
+  - 视频标题
+  - 视频描述
+  - 视频标签（自动从描述中提取或平台提供的标签）
+  - 发布时间
+- **文字内容**:
+  - 完整文字稿（格式化为无时间戳的段落文本）
+- **互动数据**:
+  - 点赞数
+  - 评论数
+  - 收藏数
+  - 转发数
+- **作者信息**:
+  - 发布账号名称
+  - 平台ID
+  - 粉丝数（如可获取）
+- **来源信息**:
+  - 视频原始链接
+  - 采集时间
+
+### 2.5 数据存储
+- **Excel格式**:
+  - 文件名: video_data_[日期].xlsx
+  - 表头包含所有提取的数据字段
+  - 每行代表一个视频的完整数据
+- **存储方式**:
+  - 自动追加新数据到现有Excel文件末尾
+  - 检测并避免重复数据
+- **示例数据结构**:
+
+| 平台 | 视频ID | 标题 | 描述 | 标签 | 文字稿 | 点赞数 | 评论数 | 转发数 | 作者名 | 作者ID | 原始链接 | 采集时间 |
+|------|-------|------|------|------|-------|-------|-------|--------|-------|-------|---------|---------|
+| 抖音 | 71300... | 示例标题 | 示例描述 | #示例 | 这是文字稿... | 1000 | 50 | 20 | 示例用户 | user123 | http://... | 2025-03-12 |
+
+### 2.6 字幕处理
+- **字幕获取方式**:
+  - 方式1: 提取视频自带字幕（优先）
+  - 方式2: 使用语音识别API生成字幕
+- **字幕格式**:
+  - 时间轴格式(.srt): 包含时间戳
+  - 纯文本格式(.txt): 无时间戳，用于数据分析
+
+## 3. 技术实现指南
+
+### 3.1 开发环境
+- Python 3.8+
+- 建议使用虚拟环境: `python -m venv venv`
+
+### 3.2 核心依赖库
+- **网络爬虫**:
+  - requests: 发送HTTP请求
+  - beautifulsoup4: HTML解析
+  - selenium: 处理动态加载内容和模拟登录
+  - playwright (备选): 现代浏览器自动化
+- **用户界面**:
+  - tkinter: 基础GUI界面
+  - PyQt5/PySide6 (备选): 高级GUI界面
+  - qrcode: 生成二维码
+  - pillow: 图像处理
+- **视频处理**:
+  - pytube: YouTube视频下载 (参考实现)
+  - ffmpeg-python: 视频转换和提取
+- **音频处理**:
+  - pydub: 音频文件操作
+- **语音识别**:
+  - SpeechRecognition: 语音识别接口
+  - (可选)百度/讯飞等中文语音识别API
+- **Excel操作**:
+  - pandas: 数据处理
+  - openpyxl: Excel文件操作
+
+### 3.3 模块设计
+```
+project/
+├── main.py              # 主入口
+├── parsers/             # 链接解析模块
+│   ├── __init__.py
+│   ├── douyin.py        # 抖音解析
+│   ├── xiaohongshu.py   # 小红书解析
+│   └── ...
+├── auth/                # 认证与登录模块
+│   ├── __init__.py
+│   ├── login_manager.py # 登录管理器
+│   ├── qrcode.py        # 二维码生成
+│   └── session.py       # 会话管理
+├── downloaders/         # 内容下载模块
+│   ├── __init__.py
+│   ├── video.py         # 视频下载
+│   ├── audio.py         # 音频下载
+│   └── subtitle.py      # 字幕处理
+├── extractors/          # 数据提取模块
+│   ├── __init__.py
+│   ├── basic_info.py    # 基本信息提取
+│   ├── stats.py         # 互动数据提取
+│   └── ...
+├── storage/             # 数据存储模块
+│   ├── __init__.py
+│   └── excel.py         # Excel操作
+├── ui/                  # 用户界面模块
+│   ├── __init__.py
+│   ├── main_window.py   # 主窗口
+│   ├── login_dialog.py  # 登录对话框
+│   └── progress.py      # 进度显示
+├── utils/               # 工具函数
+│   ├── __init__.py
+│   ├── logger.py        # 日志工具
+│   └── config.py        # 配置管理
+└── config.ini           # 配置文件
+```
+
+## 4. 接口设计
+
+### 4.1 主要接口
+```python
+# 链接解析接口
+def parse_video_link(url: str) -> dict:
+    """
+    解析视频链接，返回标准化信息
+    
+    Args:
+        url: 输入的视频链接
+        
+    Returns:
+        dict: {
+            'platform': '平台名称',
+            'video_id': '视频ID',
+            'standard_url': '标准化URL'
+        }
+    """
+
+# 登录检测和处理接口
+def check_login_required(response) -> bool:
+    """
+    检查响应是否需要登录
+    
+    Args:
+        response: 请求响应对象
+        
+    Returns:
+        bool: 是否需要登录
+    """
+
+def show_login_qrcode(platform: str) -> dict:
+    """
+    显示登录二维码并等待用户扫码
+    
+    Args:
+        platform: 平台名称
+        
+    Returns:
+        dict: {
+            'success': 是否登录成功,
+            'session': 会话对象,
+            'cookies': Cookie字典
+        }
+    """
+
+# 内容下载接口
+def download_content(video_info: dict, download_type: list, output_dir: str, session=None) -> dict:
+    """
+    下载视频相关内容
+    
+    Args:
+        video_info: 视频信息字典
+        download_type: 下载类型列表，可包含 'video', 'audio', 'subtitle'
+        output_dir: 输出目录
+        session: 登录会话对象(可选)
+        
+    Returns:
+        dict: {
+            'video_path': '视频文件路径',
+            'audio_path': '音频文件路径',
+            'subtitle_path': '字幕文件路径'
+        }
+    """
+
+# 数据提取接口
+def extract_data(video_info: dict, content_paths: dict, session=None) -> dict:
+    """
+    提取视频相关数据
+    
+    Args:
+        video_info: 视频基本信息
+        content_paths: 下载内容的路径信息
+        session: 登录会话对象(可选)
+        
+    Returns:
+        dict: 包含所有提取数据的字典
+    """
+
+# 数据存储接口
+def save_to_excel(data: dict, excel_path: str) -> bool:
+    """
+    保存数据到Excel
+    
+    Args:
+        data: 提取的数据字典
+        excel_path: Excel文件路径
+        
+    Returns:
+        bool: 保存是否成功
+    """
+```
+
+## 5. 用户界面
+
+### 5.1 命令行界面
+- **启动命令**: `python main.py`
+- **交互方式**:
+  ```
+  请输入视频链接(多个链接请用空格分隔):
+  > https://v.douyin.com/jqmFup2/ https://v.douyin.com/another_link/
+  
+  开始处理2个链接...
+  [1/2] 处理链接: https://v.douyin.com/jqmFup2/
+      - 解析成功: 抖音视频 ID:7130096181794601246
+      - 下载中: 视频、音频、字幕
+      - 数据提取中...
+      - 保存完成
+  [2/2] 处理链接: https://v.douyin.com/another_link/
+      ...
+  
+  处理完成! 结果保存至: ./output/video_data_2025-03-12.xlsx
+  ```
+
+### 5.2 图形界面(GUI)
+- **主窗口**:
+  - 链接输入区域(支持多行输入)
+  - 开始处理按钮
+  - 配置选项区域
+  - 处理进度显示
+  - 结果摘要区域
+
+- **登录对话框**:
+  - 平台名称和图标
+  - 二维码显示区域
+  - 登录状态提示
+  - 取消按钮
+  - 二维码刷新按钮
+
+- **GUI示意图**:
+```
++--------------------------------------+
+| 短视频内容采集与分析系统              |
++--------------------------------------+
+| 输入视频链接:                         |
+| +----------------------------------+ |
+| |                                  | |
+| |                                  | |
+| +----------------------------------+ |
+|                                      |
+| [开始处理]    [配置选项]              |
+|                                      |
+| 处理进度:                            |
+| [=========>          ] 45%           |
+|                                      |
+| 状态: 正在处理第2个链接...            |
++--------------------------------------+
+```
+
+### 5.3 扫码登录界面
+```
++--------------------------------------+
+|    需要登录 - 抖音                    |
++--------------------------------------+
+|                                      |
+|    +------------------------+        |
+|    |                        |        |
+|    |      二维码显示区域     |        |
+|    |                        |        |
+|    +------------------------+        |
+|                                      |
+|  请使用抖音APP扫描上方二维码登录      |
+|                                      |
+|  登录状态: 等待扫码...                |
+|                                      |
+|  [刷新二维码]    [取消]               |
++--------------------------------------+
+```
+
+### 5.4 配置选项
+- 通过config.ini文件配置:
+  ```ini
+  [PATHS]
+  download_dir = ./downloads
+  output_excel = ./output/video_data.xlsx
+
+  [DOWNLOAD]
+  download_video = yes
+  download_audio = yes
+  generate_subtitle = yes
+
+  [AUTHENTICATION]
+  save_cookies = yes
+  cookies_dir = ./cookies
+  auto_login = yes
+
+  [PERFORMANCE]
+  max_concurrent = 3
+  retry_times = 3
+  ```
+
+## 6. 错误处理
+
+### 6.1 常见错误及处理方式
+- **链接无效**:
+  ```
+  错误: 无法解析链接 "https://invalid_link"
+  - 请检查链接格式是否正确
+  - 链接可能已失效
+  ```
+
+- **需要登录**:
+  ```
+  提示: 检测到抖音平台需要登录
+  - 正在打开登录窗口，请使用抖音APP扫描二维码
+  ```
+
+- **登录失败**:
+  ```
+  错误: 登录失败
+  - 二维码可能已过期，请点击"刷新二维码"重试
+  - 确保使用正确的APP进行扫码
+  ```
+
+- **下载失败**:
+  ```
+  警告: 视频下载失败，正在重试 (1/3)...
+  警告: 视频下载失败，正在重试 (2/3)...
+  错误: 视频无法下载，已跳过。原因: 资源不可用或需要登录
+  ```
+
+- **数据提取异常**:
+  ```
+  警告: 无法获取互动数据，可能需要登录或接口变更
+  提示: 部分数据字段将为空
+  ```
+
+### 6.2 日志记录
+- 日志文件: `./logs/app_[日期].log`
+- 日志级别: INFO, WARNING, ERROR
+- 包含时间戳、模块名称、错误详情
+
+## 7. 性能优化
+
+### 7.1 并发处理
+- 使用`concurrent.futures`实现并行下载和处理
+- 可配置最大并发数，避免请求过于频繁
+- 示例:
+  ```python
+  with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+      futures = [executor.submit(process_video, link) for link in links]
+      for future in concurrent.futures.as_completed(futures):
+          # 处理结果
+  ```
+
+### 7.2 会话复用
+- 同一平台的多个视频共享登录会话
+- 减少重复登录次数，提高效率
+- 使用会话池管理不同平台的登录状态
+
+### 7.3 性能目标
+- 单个视频完整处理时间 < 2分钟
+- 内存占用 < 500MB
+- CPU使用率峰值 < 70%
+
+## 8. 反爬虫策略处理
+
+### 8.1 检测机制
+- **常见反爬措施识别**:
+  - HTTP状态码检查 (403, 429等)
+  - 响应内容关键词识别 (如"验证码", "登录")
+  - 页面结构异常检测
+
+### 8.2 应对策略
+- **用户代理轮换**:
+  ```python
+  USER_AGENTS = [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15",
+      # 更多用户代理...
+  ]
+  ```
+
+- **请求延迟**:
+  ```python
+  import random
+  import time
+  
+  def request_with_delay(url, session=None):
+      # 随机延迟0.5-2秒
+      time.sleep(random.uniform(0.5, 2))
+      return (session or requests).get(url)
+  ```
+
+- **请求头模拟**:
+  ```python
+  headers = {
+      "User-Agent": random.choice(USER_AGENTS),
+      "Referer": "https://www.douyin.com/",
+      "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+      # 更多头部信息...
+  }
+  ```
+
+- **登录会话管理**:
+  ```python
+  def load_cookies(platform):
+      """加载已保存的Cookies"""
+      cookie_path = f"./cookies/{platform}.cookies"
+      if os.path.exists(cookie_path):
+          with open(cookie_path, "rb") as f:
+              return pickle.load(f)
+      return None
+  
+  def save_cookies(platform, cookies):
+      """保存Cookies到文件"""
+      os.makedirs("./cookies", exist_ok=True)
+      with open(f"./cookies/{platform}.cookies", "wb") as f:
+          pickle.dump(cookies, f)
+  ```
+
+## 9. 扩展设计
+
+### 9.1 新平台支持
+通过实现标准化接口添加新平台:
+```python
+# 在parsers目录下创建新的平台解析器文件 (如 bilibili.py)
+
+from .base_parser import BaseParser
+
+class BilibiliParser(BaseParser):
+    def __init__(self):
+        super().__init__(platform_name="Bilibili")
+    
+    def match(self, url):
+        """判断URL是否为本平台"""
+        return "bilibili.com" in url or "b23.tv" in url
+    
+    def standardize(self, url):
+        """标准化URL"""
+        # 实现代码
+    
+    def extract_video_id(self, url):
+        """提取视频ID"""
+        # 实现代码
+    
+    def check_login_required(self, response):
+        """检查是否需要登录"""
+        # 实现代码
+    
+    def login_qrcode_params(self):
+        """获取二维码登录参数"""
+        # 实现代码
+```
+
+### 9.2 自定义数据字段
+- 通过配置文件添加自定义字段:
+  ```ini
+  [CUSTOM_FIELDS]
+  enable = yes
+  fields = category,mood,keywords
+  ```
+
+- 自定义数据处理函数接口:
+  ```python
+  def process_custom_fields(video_data, field_name):
+      """处理自定义字段"""
+      # 实现代码
+  ```
+
+### 9.3 插件系统
+- 支持自定义插件扩展功能:
+  ```python
+  class Plugin:
+      """插件基类"""
+      def __init__(self, name):
+          self.name = name
+      
+      def on_before_download(self, video_info):
+          """下载前处理"""
+          pass
+      
+      def on_after_download(self, video_info, content_paths):
+          """下载后处理"""
+          pass
+      
+      def on_data_extracted(self, data):
+          """数据提取后处理"""
+          pass
+  ```
+
+## 10. 测试计划
+
+### 10.1 单元测试
+- 针对各功能模块编写测试用例
+- 使用`pytest`运行测试
+
+### 10.2 集成测试
+- 测试完整工作流程
+- 针对不同平台的视频进行端到端测试
+- 模拟各种反爬虫场景的测试
+
+### 10.3 测试用例示例
+```python
+def test_douyin_link_parsing():
+    parser = DouyinParser()
+    result = parser.parse("https://v.douyin.com/jqmFup2/")
+    assert result["platform"] == "抖音"
+    assert "video_id" in result
+    assert result["standard_url"].startswith("https://www.douyin.com/video/")
+
+def test_login_detection():
+    # 模拟登录提示响应
+    mock_response = MockResponse(
+        status_code=200,
+        content="<div>请登录后继续访问</div>"
+    )
+    
+    login_manager = LoginManager()
+    assert login_manager.check_login_required(mock_response) == True
+```
+
+## 11. 部署指南
+
+### 11.1 环境配置
+1. 克隆代码库
+2. 创建虚拟环境: `python -m venv venv`
+3. 激活环境: 
+   - Windows: `venv\Scripts\activate`
+   - Linux/Mac: `source venv/bin/activate`
+4. 安装依赖: `pip install -r requirements.txt`
+5. 安装FFmpeg (视频处理依赖):
+   - Windows: 下载并添加到PATH
+   - Linux: `apt-get install ffmpeg`
+   - Mac: `brew install ffmpeg`
+
+### 11.2 启动系统
+```bash
+# 命令行模式
+python main.py
+
+# GUI模式
+python main.py --gui
+```
+
+### 11.3 Docker部署
+```dockerfile
+FROM python:3.9-slim
+
+# 安装依赖
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 复制项目文件
+COPY . /app/
+
+# 安装Python依赖
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 设置挂载点
+VOLUME ["/app/downloads", "/app/output", "/app/cookies"]
+
+# 启动命令
+CMD ["python", "main.py"]
+```
+
+
+## 13. 后续迭代计划
+
+### 第一阶段 (优先级高)
+- 实现抖音平台支持
+- 完成基本数据提取功能
+- 实现Excel存储功能
+- 实现扫码登录功能
+
+### 第二阶段 (优先级中)
+- 添加小红书、视频号平台支持
+- 优化字幕生成功能
+- 增强错误处理和日志
+- 改进会话管理机制
+
+### 第三阶段 (优先级低)
+- 添加快手平台支持
+- 实现数据可视化报表
+- 优化并发性能
+- 开发插件系统
+
