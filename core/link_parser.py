@@ -1,112 +1,107 @@
 import re
 import requests
 from urllib.parse import urlparse, parse_qs
-from utils.common import logger, extract_url
 
 class LinkParser:
     def __init__(self):
-        self.platforms = {
-            'douyin': {
-                'domains': ['douyin.com', 'iesdouyin.com'],
-                'patterns': [r'https?://(?:www\.)?(?:v\.)?douyin\.com/\w+/?']
-            },
-            'xiaohongshu': {
-                'domains': ['xiaohongshu.com', 'xhslink.com'],
-                'patterns': [r'https?://(?:www\.)?xiaohongshu\.com/\w+/?']
-            },
-            'kuaishou': {
-                'domains': ['kuaishou.com', 'gifshow.com'],
-                'patterns': [r'https?://(?:www\.)?kuaishou\.com/\w+/?']
-            },
-            'weixin': {
-                'domains': ['weixin.qq.com', 'wx.qq.com'],
-                'patterns': [r'https?://(?:www\.)?weixin\.qq\.com/\w+/?']
-            }
+        # 各平台的链接正则表达式
+        self.patterns = {
+            'douyin': r'(?:https?://)?(?:www\.)?(?:v\.douyin\.com|douyin\.com)/(?:[^/]+/)?([^/\s?]+)',
+            'xiaohongshu': r'(?:https?://)?(?:www\.)?xiaohongshu\.com/(?:discovery/item|item)/([^/\s?]+)',
+            'kuaishou': r'(?:https?://)?(?:www\.)?kuaishou\.com/(?:short-video|photo)/([^/\s?]+)',
+            'weishi': r'(?:https?://)?(?:www\.)?weishi\.qq\.com/(?:\w+/)?([^/\s?]+)'
         }
     
-    def identify_platform(self, url):
-        """识别URL所属平台"""
-        if not url:
-            return None
+    def parse_link(self, link):
+        """
+        解析链接，返回平台名称和视频ID
+        """
+        # 清理链接，去除多余空格和换行符
+        link = link.strip()
         
-        parsed_url = urlparse(url)
-        domain = parsed_url.netloc
-        
-        for platform, config in self.platforms.items():
-            if any(d in domain for d in config['domains']):
-                return platform
-            
-            for pattern in config['patterns']:
-                if re.match(pattern, url):
-                    return platform
-        
-        return None
-    
-    def extract_url_from_text(self, text):
-        """从分享文本中提取URL"""
-        return extract_url(text)
-    
-    def follow_redirect(self, short_url):
-        """跟随短链接重定向到真实URL"""
-        try:
-            response = requests.head(short_url, allow_redirects=True, timeout=10)
-            return response.url
-        except Exception as e:
-            logger.error(f"Error following redirect: {e}")
-            return short_url
-    
-    def parse_douyin_link(self, url):
-        """解析抖音链接，提取视频ID"""
-        # 如果是短链接，先跟随重定向
-        if '/v.douyin.com/' in url or '/www.iesdouyin.com/' in url:
-            url = self.follow_redirect(url)
-        
-        # 提取视频ID
-        try:
-            parsed_url = urlparse(url)
-            path = parsed_url.path
-            
-            # 从路径中提取视频ID
-            video_id = None
-            if '/video/' in path:
-                video_id = path.split('/video/')[1].split('/')[0]
-            
-            # 从查询参数中尝试提取
-            if not video_id:
-                query_params = parse_qs(parsed_url.query)
-                if 'item_id' in query_params:
-                    video_id = query_params['item_id'][0]
-            
-            return {
-                'platform': 'douyin',
-                'video_id': video_id,
-                'original_url': url
-            }
-        except Exception as e:
-            logger.error(f"Error parsing Douyin link: {e}")
-            return None
-    
-    def parse_link(self, input_text):
-        """解析输入文本，提取链接信息"""
-        # 从输入文本中提取URL
-        url = self.extract_url_from_text(input_text)
-        if not url:
-            logger.warning(f"No URL found in input: {input_text}")
-            return None
+        # 检查是否是短链接并需要重定向
+        if 'v.douyin.com' in link or any(domain in link for domain in ['t.cn', 'b23.tv', 'dwz.cn']):
+            try:
+                response = requests.head(link, allow_redirects=True, timeout=10)
+                link = response.url
+            except Exception as e:
+                raise Exception(f"解析短链接失败: {str(e)}")
         
         # 识别平台
-        platform = self.identify_platform(url)
-        if not platform:
-            logger.warning(f"Unknown platform for URL: {url}")
-            return None
+        platform = None
+        video_id = None
         
-        # 根据平台调用相应的解析函数
-        if platform == 'douyin':
-            return self.parse_douyin_link(url)
-        else:
-            logger.info(f"Platform {platform} parsing not yet implemented")
-            return {
-                'platform': platform,
-                'video_id': None,
-                'original_url': url
-            }
+        for platform_name, pattern in self.patterns.items():
+            match = re.search(pattern, link)
+            if match:
+                platform = platform_name
+                video_id = match.group(1)
+                break
+        
+        if not platform or not video_id:
+            # 如果仍然无法识别，尝试解析URL参数
+            parsed_url = urlparse(link)
+            query_params = parse_qs(parsed_url.query)
+            
+            # 针对抖音特殊处理
+            if 'douyin.com' in parsed_url.netloc:
+                platform = 'douyin'
+                if 'video_id' in query_params:
+                    video_id = query_params['video_id'][0]
+                elif 'item_ids' in query_params:
+                    video_id = query_params['item_ids'][0]
+            
+            # 如果还是没找到，可能需要登录或使用特殊方法
+            if not video_id:
+                raise Exception(f"无法解析链接: {link}")
+        
+        return {
+            'platform': platform,
+            'video_id': video_id,
+            'original_url': link
+        }
+    
+    def batch_parse_links(self, links):
+        """
+        批量解析多个链接
+        """
+        results = []
+        errors = []
+        
+        for link in links:
+            if not link.strip():
+                continue
+                
+            try:
+                result = self.parse_link(link)
+                results.append(result)
+            except Exception as e:
+                errors.append({
+                    'link': link,
+                    'error': str(e)
+                })
+        
+        return {
+            'results': results,
+            'errors': errors
+        }
+
+
+if __name__ == "__main__":
+    # 测试代码
+    parser = LinkParser()
+    
+    test_links = [
+        "4.35 Rxf:/ H@V.YZ 09/20 主图多放一个元素 点击率暴跌70%% # 电商主图 # 电商 # 主图 # 设计  https://v.douyin.com/i5rSM7Y7/ 复制此链接，打开Dou音搜索，直接观看视频！",
+    ]
+    
+    for link in test_links:
+        try:
+            result = parser.parse_link(link)
+            print(f"链接: {link}")
+            print(f"平台: {result['platform']}")
+            print(f"视频ID: {result['video_id']}")
+            print(f"原始URL: {result['original_url']}")
+        except Exception as e:
+            print(f"解析失败: {link}")
+            print(f"错误信息: {str(e)}")

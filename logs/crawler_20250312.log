@@ -18,3 +18,71 @@
 2025-03-12 12:04:22,567 - utils.common - INFO - 处理链接 2/2: 4.35 Rxf:/ H@V.YZ 09/20 主图多放一个元素 点击率暴跌70%% # 电商主图 # 电商 # 主图 # 设计  https://v.douyin.com/i5rSM7Y7/ 复制此链接，打开Dou音搜索，直接观看视频！
 2025-03-12 12:04:22,580 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=None
 2025-03-12 12:04:22,837 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:09:27,455 - utils.common - INFO - 处理链接 1/1: https://v27-wha.douyinvod.com/bf6b64511162536d01c7ec57a09387a3/67d1167d/video/tos/cn/tos-cn-ve-15c000-ce/okDfZFrWAz09NDfuEr1EJPXBbkEAvnuewQCFIJ/?a=1128&ch=197&cr=3&dr=0&lr=all&cd=0%7C0%7C0%7C3&cv=1&br=1281&bt=1281&cs=0&ds=6&ft=vwbdHCJrBBkq8Zmo2bH-G_vjVQWw&mime_type=video_mp4&qs=0&rc=NmY4NTQ3NDc5ZTY1OzQ5ZEBpamg6bHk5cmxzeDMzbGkzNEAvMC1iNDZfX18xYzMuYGIyYSNpNjU0MmRjaXJgLS1kLWJzcw%3D%3D&btag=c0010e00090000&cquery=100b_107m_103Q_103R_103S&dy_q=1741752408&feature_id=f0150a16a324336cda5d6dd0b69ed299&l=20250312120648EB1F2952DE03E7E3AFE2
+2025-03-12 12:09:27,465 - utils.common - WARNING - Unknown platform for URL: https://v27-wha.douyinvod.com
+2025-03-12 12:09:27,479 - utils.common - INFO - 无法解析链接: https://v27-wha.douyinvod.com/bf6b64511162536d01c7ec57a09387a3/67d1167d/video/tos/cn/tos-cn-ve-15c000-ce/okDfZFrWAz09NDfuEr1EJPXBbkEAvnuewQCFIJ/?a=1128&ch=197&cr=3&dr=0&lr=all&cd=0%7C0%7C0%7C3&cv=1&br=1281&bt=1281&cs=0&ds=6&ft=vwbdHCJrBBkq8Zmo2bH-G_vjVQWw&mime_type=video_mp4&qs=0&rc=NmY4NTQ3NDc5ZTY1OzQ5ZEBpamg6bHk5cmxzeDMzbGkzNEAvMC1iNDZfX18xYzMuYGIyYSNpNjU0MmRjaXJgLS1kLWJzcw%3D%3D&btag=c0010e00090000&cquery=100b_107m_103Q_103R_103S&dy_q=1741752408&feature_id=f0150a16a324336cda5d6dd0b69ed299&l=20250312120648EB1F2952DE03E7E3AFE2
+2025-03-12 12:09:42,150 - utils.common - INFO - Application closed
+2025-03-12 12:27:06,424 - utils.common - INFO - Starting Video Crawler Application
+2025-03-12 12:27:06,485 - utils.common - WARNING - ffmpeg not found. Audio extraction will be unavailable.
+2025-03-12 12:27:06,486 - utils.common - WARNING - ffmpeg not found. Some subtitle extraction features may be unavailable.
+2025-03-12 12:27:14,198 - utils.common - INFO - 处理链接 1/2: 5.89 JII:/ 02/17 X@m.DU 圆柱圆锥体积表面积是六年级下册的重点难点 这套六合一的圆柱圆锥演示套装，不仅能让孩子们直观看到立体模型，还配有展开图，轻松理解体积和表面积的原理，为初中打好基础！# 小学数学# 六年级下册# 必备学具  https://v.douyin.com/i5rSr1pG/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:27:14,968 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=7476409827749629242
+2025-03-12 12:27:20,152 - utils.common - ERROR - Error fetching Douyin video info: HTTPSConnectionPool(host='www.iesdouyin.com', port=443): Max retries exceeded with url: /share/video/7476409827749629242/?region=CN&mid=7476409871970110234&u_code=1li4limhbdfm&did=MS4wLjABAAAAyiYJ7gkOJbbTOHQfpQBeyFY3Fx4w31w4qM8hT07XArLBdJxRijrB8PT0KPrVL1yF&iid=MS4wLjABAAAANwkJuWIRFOzg5uCpDRpMj4OX-QryoDgn-yYlXQnRwQQ&with_sec_did=1&video_share_track_ver=&titleType=title&share_sign=GSOgXLp9dRoQ2jT6T0lRuSl7f1oEBsYUhFRKDHTFgxw-&share_version=170400&ts=1740745615&from_aid=6383&from_ssr=1&from=web_code_link (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2025-03-12 12:27:20,167 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:27:20,176 - utils.common - INFO - 处理链接 2/2: 4.35 Rxf:/ H@V.YZ 09/20 主图多放一个元素 点击率暴跌70%% # 电商主图 # 电商 # 主图 # 设计  https://v.douyin.com/i5rSM7Y7/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:27:20,880 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=7475647463840402729
+2025-03-12 12:27:21,446 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:28:35,656 - utils.common - INFO - Application closed
+2025-03-12 12:29:06,956 - utils.common - INFO - Starting Video Crawler Application
+2025-03-12 12:29:07,008 - utils.common - WARNING - ffmpeg not found. Audio extraction will be unavailable.
+2025-03-12 12:29:07,009 - utils.common - WARNING - ffmpeg not found. Some subtitle extraction features may be unavailable.
+2025-03-12 12:29:19,117 - utils.common - INFO - 处理链接 1/2: 5.89 JII:/ 02/17 X@m.DU 圆柱圆锥体积表面积是六年级下册的重点难点 这套六合一的圆柱圆锥演示套装，不仅能让孩子们直观看到立体模型，还配有展开图，轻松理解体积和表面积的原理，为初中打好基础！# 小学数学# 六年级下册# 必备学具  https://v.douyin.com/i5rSr1pG/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:29:19,785 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=7476409827749629242
+2025-03-12 12:29:20,482 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:29:20,489 - utils.common - INFO - 处理链接 2/2: 4.35 Rxf:/ H@V.YZ 09/20 主图多放一个元素 点击率暴跌70%% # 电商主图 # 电商 # 主图 # 设计  https://v.douyin.com/i5rSM7Y7/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:29:21,179 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=7475647463840402729
+2025-03-12 12:29:21,737 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:29:25,311 - utils.common - INFO - Application closed
+2025-03-12 12:35:41,883 - utils.common - INFO - Starting Video Crawler Application
+2025-03-12 12:35:41,934 - utils.common - WARNING - ffmpeg not found. Audio extraction will be unavailable.
+2025-03-12 12:35:41,935 - utils.common - WARNING - ffmpeg not found. Some subtitle extraction features may be unavailable.
+2025-03-12 12:36:07,910 - utils.common - INFO - Starting Video Crawler Application
+2025-03-12 12:36:07,962 - utils.common - WARNING - ffmpeg not found. Audio extraction will be unavailable.
+2025-03-12 12:36:07,962 - utils.common - WARNING - ffmpeg not found. Some subtitle extraction features may be unavailable.
+2025-03-12 12:36:12,036 - utils.common - INFO - 处理链接 1/1: 5.89 JII:/ 02/17 X@m.DU 圆柱圆锥体积表面积是六年级下册的重点难点 这套六合一的圆柱圆锥演示套装，不仅能让孩子们直观看到立体模型，还配有展开图，轻松理解体积和表面积的原理，为初中打好基础！# 小学数学# 六年级下册# 必备学具  https://v.douyin.com/i5rSr1pG/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:36:12,044 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=None
+2025-03-12 12:36:12,548 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:45:42,048 - utils.common - INFO - Starting Video Crawler Application
+2025-03-12 12:45:42,100 - utils.common - WARNING - ffmpeg not found. Audio extraction will be unavailable.
+2025-03-12 12:45:42,101 - utils.common - WARNING - ffmpeg not found. Some subtitle extraction features may be unavailable.
+2025-03-12 12:46:02,633 - utils.common - INFO - 处理链接 1/2: 5.89 JII:/ 02/17 X@m.DU 圆柱圆锥体积表面积是六年级下册的重点难点 这套六合一的圆柱圆锥演示套装，不仅能让孩子们直观看到立体模型，还配有展开图，轻松理解体积和表面积的原理，为初中打好基础！# 小学数学# 六年级下册# 必备学具  https://v.douyin.com/i5rSr1pG/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:46:02,636 - utils.common - INFO - 提取到URL: https://v.douyin.com
+2025-03-12 12:46:02,636 - utils.common - INFO - 解析抖音链接成功: {'platform': 'douyin', 'video_id': None, 'original_url': 'https://v.douyin.com', 'redirect_url': None}
+2025-03-12 12:46:02,642 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=None
+2025-03-12 12:46:03,070 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:46:03,077 - utils.common - INFO - 处理链接 2/2: 4.35 Rxf:/ H@V.YZ 09/20 主图多放一个元素 点击率暴跌70%% # 电商主图 # 电商 # 主图 # 设计  https://v.douyin.com/i5rSM7Y7/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:46:03,082 - utils.common - INFO - 提取到URL: https://v.douyin.com
+2025-03-12 12:46:03,082 - utils.common - INFO - 解析抖音链接成功: {'platform': 'douyin', 'video_id': None, 'original_url': 'https://v.douyin.com', 'redirect_url': None}
+2025-03-12 12:46:03,090 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=None
+2025-03-12 12:46:03,346 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:52:10,879 - utils.common - INFO - Starting Video Crawler Application
+2025-03-12 12:52:10,930 - utils.common - WARNING - ffmpeg not found. Audio extraction will be unavailable.
+2025-03-12 12:52:10,930 - utils.common - WARNING - ffmpeg not found. Some subtitle extraction features may be unavailable.
+2025-03-12 12:52:29,316 - utils.common - INFO - 处理链接 1/2: 5.89 JII:/ 02/17 X@m.DU 圆柱圆锥体积表面积是六年级下册的重点难点 这套六合一的圆柱圆锥演示套装，不仅能让孩子们直观看到立体模型，还配有展开图，轻松理解体积和表面积的原理，为初中打好基础！# 小学数学# 六年级下册# 必备学具  https://v.douyin.com/i5rSr1pG/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:52:29,319 - utils.common - INFO - 提取到URL: https://v.douyin.com/i5rSr1pG/
+2025-03-12 12:52:29,319 - utils.common - INFO - 开始解析抖音链接: https://v.douyin.com/i5rSr1pG/
+2025-03-12 12:52:29,319 - utils.common - INFO - 从短链接中提取到ID部分: 5rSr1pG
+2025-03-12 12:52:30,348 - utils.common - INFO - 短链接 https://v.douyin.com/i5rSr1pG/ 重定向到 https://www.douyin.com/video/7476409827749629242?previous_page=web_code_link
+2025-03-12 12:52:30,348 - utils.common - INFO - 短链接已重定向到: https://www.douyin.com/video/7476409827749629242?previous_page=web_code_link
+2025-03-12 12:52:30,349 - utils.common - INFO - 解析抖音链接结果: {'platform': 'douyin', 'video_id': '5rSr1pG', 'original_url': 'https://v.douyin.com/i5rSr1pG/', 'redirect_url': 'https://www.douyin.com/video/7476409827749629242?previous_page=web_code_link'}
+2025-03-12 12:52:30,354 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=5rSr1pG
+2025-03-12 12:52:31,026 - utils.common - INFO - 无法获取视频信息或播放地址
+2025-03-12 12:52:31,033 - utils.common - INFO - 处理链接 2/2: 4.35 Rxf:/ H@V.YZ 09/20 主图多放一个元素 点击率暴跌70%% # 电商主图 # 电商 # 主图 # 设计  https://v.douyin.com/i5rSM7Y7/ 复制此链接，打开Dou音搜索，直接观看视频！
+2025-03-12 12:52:31,037 - utils.common - INFO - 提取到URL: https://v.douyin.com/i5rSM7Y7/
+2025-03-12 12:52:31,037 - utils.common - INFO - 开始解析抖音链接: https://v.douyin.com/i5rSM7Y7/
+2025-03-12 12:52:31,037 - utils.common - INFO - 从短链接中提取到ID部分: 5rSM7Y7
+2025-03-12 12:52:31,956 - utils.common - INFO - 短链接 https://v.douyin.com/i5rSM7Y7/ 重定向到 https://www.douyin.com/video/7475647463840402729?previous_page=web_code_link
+2025-03-12 12:52:31,957 - utils.common - INFO - 短链接已重定向到: https://www.douyin.com/video/7475647463840402729?previous_page=web_code_link
+2025-03-12 12:52:31,957 - utils.common - INFO - 解析抖音链接结果: {'platform': 'douyin', 'video_id': '5rSM7Y7', 'original_url': 'https://v.douyin.com/i5rSM7Y7/', 'redirect_url': 'https://www.douyin.com/video/7475647463840402729?previous_page=web_code_link'}
+2025-03-12 12:52:31,964 - utils.common - INFO - 解析链接成功: 平台=douyin, 视频ID=5rSM7Y7
+2025-03-12 12:52:32,467 - utils.common - INFO - 无法获取视频信息或播放地址
